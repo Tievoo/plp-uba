@@ -102,7 +102,53 @@ insertarOrdenado n xs = recr (\x xs rec -> if x < n then x : rec else n : x : xs
 -- -------------------- Ejercicio 8
 
 -- (I)
+
 mapPares :: (a -> b -> c) -> [(a,b)] -> [c]
 mapPares f = map (uncurry f)
+
+-- (II)
+
+armarPares :: [a] -> [b] -> [(a,b)]
+-- Without using zip
+armarPares [] _ = []
+armarPares _ [] = []
+armarPares (x:xs) (y:ys) = (x, y) : armarPares xs ys
+
+-- (III)
+
+mapDoble :: (a -> b -> c) -> [a] -> [b] -> [c]
+mapDoble f xs ys = mapPares f (armarPares xs ys)
+
+-- -------------------- Ejercicio 10
+
+generate :: ([a] -> Bool) -> ([a] -> a) -> [a]
+generate stop next = generateFrom stop next []
+
+generateFrom:: ([a] -> Bool) -> ([a] -> a) -> [a] -> [a]
+generateFrom stop next xs | stop xs = init xs
+                          | otherwise = generateFrom stop next (xs ++ [next xs])
+
+-- (I)
+
+generateBase :: ([a] -> Bool) -> a -> (a -> a) -> [a]
+generateBase stop base next = generate stop (\l -> if null l then base else next (last l))
+
+-- (II)
+
+factoriales :: Int -> [Int]
+factoriales n = generate (\l -> length l > n) next
+    where
+        next :: [Int] -> Int
+        next [] = 1
+        next l = product [1..(length l)]
+
+-- (III)
+
+iterateN :: Int -> (a -> a) -> a -> [a]
+iterateN n f x = generateBase (\l -> length l > n) x f
+
+-- (IV)
+
+-- idk
 
 
