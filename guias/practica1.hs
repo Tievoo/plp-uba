@@ -151,4 +151,79 @@ iterateN n f x = generateBase (\l -> length l > n) x f
 
 -- idk
 
+-- -------------------- Ejercicio 11
 
+foldNat :: (Integer -> a -> a) -> a -> Integer -> a
+foldNat _ b 0 = b
+foldNat f b n = f n (foldNat f b (n-1))
+
+potencia :: Integer -> Integer -> Integer
+potencia n = foldNat (\x r ->  r * n) 1
+
+
+-- -------------------- Ejercicio 12
+
+data Polinomio a = X
+                    | Cte a
+                    | Suma (Polinomio a) (Polinomio a)
+                    | Prod (Polinomio a) (Polinomio a)
+
+foldPoli :: b -> (a -> b) -> (b -> b -> b) -> (b -> b -> b) -> Polinomio a -> b 
+foldPoli f1 f2 f3 f4 t = case t of
+    X -> f1
+    Cte x -> f2 x
+    Suma t k -> f3 (r t) (r k)
+    Prod t k -> f4 (r t) (r k)
+    where r = foldPoli f1 f2 f3 f4
+
+evaluar :: Num a => a -> Polinomio a -> a
+evaluar x = foldPoli x id (+) (*)
+
+-- -------------------- Ejercicio 13
+
+data AB a = Nil | Bin (AB a) a (AB a)
+
+foldAB :: b -> (b -> a -> b -> b) -> AB a -> b
+foldAB f1 f2 t = case t of
+    Nil -> f1
+    Bin i x d ->  f2 (r i) x (r d)
+    where r = foldAB f1 f2
+
+recAB :: b -> (AB a -> a -> AB a -> b -> b -> b) -> AB a -> b
+recAB f1 f2 t = case t of
+    Nil -> f1
+    Bin i x d -> f2 i x d (r i) (r d)
+    where r = recAB f1 f2
+
+-- (II)
+
+esNil :: AB a -> Bool
+esNil (Nil) = True
+esNil (Bin i r d) = False
+
+altura :: AB a -> Integer
+altura = foldAB 1 (\i x d -> 1 + max i d)
+
+cantNodos :: AB a -> Integer
+cantNodos = foldAB 1 (\i x d -> 1 + i+d)
+
+-- (III)
+
+mejorSegunAB :: (a -> a -> Bool) -> AB a -> a
+mejorSegunAB f (Bin i1 x1 d1) = foldAB x1 (\ir x dr -> comp (comp ir x1) dr) (Bin i1 x1 d1)
+    where comp x y = if f x y then x else y
+
+-- (IV)
+
+esABB :: Ord a => AB a -> Bool
+esABB = recAB True f
+    where f i v d ri rd 
+                | esNil i && esNil d = True
+                | esNil d = ri && raiz i <= v
+                | esNil i = rd && raiz d > v
+                | otherwise = ri && rd && raiz i <= v && raiz d > v
+
+raiz :: AB a -> a
+raiz (Bin i r d) = r
+
+abb = Bin (Bin (Bin Nil 5 Nil) 7 (Bin Nil 9 Nil) ) 10 (Bin (Bin Nil 11 Nil) 15 (Bin Nil 16 Nil))
